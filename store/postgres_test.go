@@ -16,5 +16,5 @@ func TestDBConnection(t *testing.T) {
 		t.Fatalf("ping failed: %v", err)
 	}
 
-	t.Log("✓ connected to database")
+	t.Log("connected to database")
 }

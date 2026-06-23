@@ -24,28 +24,32 @@ func New(connStr string) (*Store, error) {
 func (s *Store) Save(longURL string) (uint64, error) {
 	var id uint64
 	err := s.db.QueryRow(
-		`INSERT INTO urls (original_url) VALUES ($1) RETURNING id`,
+		`INSERT INTO urls (original) VALUES ($1) RETURNING id`,
 		longURL,
 	).Scan(&id)
 	return id, err
 }
 
-func (s *Store) FindByCode(code string) (string, error) {
+func (s *Store) FindByURL(longURL string) (uint64, error) {
+	var id uint64
+	err := s.db.QueryRow(
+		`SELECT id FROM urls WHERE original = $1`,
+		longURL,
+	).Scan(&id)
+	if err == sql.ErrNoRows {
+		return 0, nil
+	}
+	return id, err
+}
+
+func (s *Store) FindByID(id uint64) (string, error) {
 	var longURL string
 	err := s.db.QueryRow(
-		`SELECT original_url FROM urls WHERE short_code = $1`,
-		code,
+		`SELECT original FROM urls WHERE id = $1`,
+		id,
 	).Scan(&longURL)
 	if err == sql.ErrNoRows {
 		return "", nil
 	}
 	return longURL, err
-}
-
-func (s *Store) UpdateCode(id uint64, code string) error {
-	_, err := s.db.Exec(
-		`UPDATE urls SET short_code = $1 WHERE id = $2`,
-		code, id,
-	)
-	return err
 }
